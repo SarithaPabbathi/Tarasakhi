@@ -23,4 +23,9 @@
   { "id": "blouse-02", "category": "blouses", "name": "Boat Neck Blouse", "price": "₹899", "fabric": "Cotton Silk", "badge": "", "image": "images/blouses/blouse-02.jpg" },
   { "id": "blouse-03", "category": "blouses", "name": "Backless Tie-Up Blouse", "price": "₹1,050", "fabric": "Silk Blend", "badge": "", "image": "images/blouses/blouse-03.jpg" },
   { "id": "blouse-04", "category": "blouses", "name": "Puff Sleeve Blouse", "price": "₹950", "fabric": "Georgette", "badge": "", "image": "images/blouses/blouse-04.jpg" }
+
+  { "id": "sun-01", "category": "glasses", "name": "Sun Glasses", "price": "₹1,500", "fabric": "Metal", "badge": "", "image": "images/glasses/sun-01.jpg" },
+  { "id": "sun-02", "category": "glasses", "name": "Sun Glasses", "price": "₹1,800", "fabric": "Metal", "badge": "", "image": "images/glasses/sun-02.jpg" },
+  { "id": "sun-03", "category": "glasses", "name": "Sun Glasses", "price": "₹2,500", "fabric": "Metal", "badge": "", "image": "images/glasses/sun-03.jpg" },
+  { "id": "sun-04", "category": "glasses", "name": "Sun Glasses", "price": "₹2,500", "fabric": "Metal", "badge": "", "image": "images/glasses/sun-04.jpg" } 
 ]
