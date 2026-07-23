@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -130,6 +131,41 @@
   .price{ font-weight:700; color:var(--magenta-deep); font-size:0.98rem; }
   .mini-tag{ font-size:0.7rem; font-weight:600; color:var(--teal-deep); background:#e7f4f2; padding:4px 10px; border-radius:999px; }
   .empty-note{ color:#8a6b70; font-size:0.9rem; font-style:italic; }
+  .piece-visual img{ cursor:zoom-in; }
+
+  /* ---------- LIGHTBOX (click photo to zoom) ---------- */
+  .lightbox{
+    position:fixed; inset:0; z-index:200;
+    background:rgba(20,10,12,0.94);
+    display:none; align-items:center; justify-content:center;
+    flex-direction:column;
+  }
+  .lightbox.open{ display:flex; }
+  .lightbox-toolbar{ display:flex; gap:12px; margin-bottom:16px; }
+  .lightbox-toolbar button{
+    background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.32);
+    color:#fff; width:42px; height:42px; border-radius:50%;
+    font-size:1.15rem; cursor:pointer; transition:background .2s ease;
+  }
+  .lightbox-toolbar button:hover{ background:rgba(255,255,255,0.26); }
+  .lightbox-toolbar button.reset{ width:auto; padding:0 18px; border-radius:999px; font-size:0.85rem; }
+  .lightbox-close{
+    position:absolute; top:20px; right:26px;
+    background:none; border:none; color:#fff;
+    font-size:2.1rem; line-height:1; cursor:pointer;
+  }
+  .lightbox-stage{
+    width:90vw; height:76vh; max-width:900px;
+    overflow:hidden; display:flex; align-items:center; justify-content:center;
+    cursor:grab;
+  }
+  .lightbox-stage.dragging{ cursor:grabbing; }
+  .lightbox-stage img{
+    max-width:100%; max-height:100%;
+    transition:transform .12s ease;
+    user-select:none; touch-action:none;
+  }
+  .lightbox-hint{ color:#e0c7ba; font-size:0.78rem; margin-top:14px; opacity:0.75; }
 
   .craft{ display:grid; grid-template-columns:0.9fr 1.1fr; gap:56px; align-items:center; background:linear-gradient(135deg, var(--teal-deep), var(--teal)); border-radius:28px; padding:56px; color:#fff; }
   .craft h2{ color:#fff; font-size:clamp(1.8rem,3.4vw,2.4rem); }
@@ -355,6 +391,19 @@
   </div>
 </footer>
 
+<div class="lightbox" id="lightbox" aria-hidden="true">
+  <button class="lightbox-close" id="lightboxClose" aria-label="Close">&times;</button>
+  <div class="lightbox-toolbar">
+    <button id="zoomOutBtn" aria-label="Zoom out">−</button>
+    <button class="reset" id="zoomResetBtn">Reset</button>
+    <button id="zoomInBtn" aria-label="Zoom in">+</button>
+  </div>
+  <div class="lightbox-stage" id="lightboxStage">
+    <img id="lightboxImg" src="" alt="">
+  </div>
+  <p class="lightbox-hint">Scroll or use +/− to zoom · drag to pan · double-click to reset</p>
+</div>
+
 <script>
   // ---------- nav toggle ----------
   const menuToggle = document.getElementById('menuToggle');
@@ -413,7 +462,8 @@
         <div class="piece-visual">
           ${badge}
           <img src="${item.image}" alt="${item.name}"
-               onerror="this.parentElement.classList.add('img-missing')">
+               onerror="this.parentElement.classList.add('img-missing')"
+               onclick="openLightbox(this)">
           <div class="missing-note">Add photo:<br>${item.image}</div>
         </div>
         <div class="piece-body">
@@ -425,6 +475,74 @@
         </div>
       </div>`;
   }
+
+  // ---------- LIGHTBOX: click a product photo to open, zoom, and pan ----------
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxStage = document.getElementById('lightboxStage');
+  let lbScale = 1, lbX = 0, lbY = 0, lbDragging = false, lbStartX = 0, lbStartY = 0;
+
+  function lbApply(){
+    lightboxImg.style.transform = `translate(${lbX}px, ${lbY}px) scale(${lbScale})`;
+  }
+  function lbReset(){ lbScale = 1; lbX = 0; lbY = 0; lbApply(); }
+
+  function openLightbox(imgEl){
+    lightboxImg.src = imgEl.src;
+    lightboxImg.alt = imgEl.alt;
+    lbReset();
+    lightbox.classList.add('open');
+    lightbox.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox(){
+    lightbox.classList.remove('open');
+    lightbox.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
+
+  document.getElementById('zoomInBtn').addEventListener('click', () => {
+    lbScale = Math.min(lbScale + 0.4, 4); lbApply();
+  });
+  document.getElementById('zoomOutBtn').addEventListener('click', () => {
+    lbScale = Math.max(lbScale - 0.4, 1);
+    if (lbScale === 1) { lbX = 0; lbY = 0; }
+    lbApply();
+  });
+  document.getElementById('zoomResetBtn').addEventListener('click', lbReset);
+  lightboxImg.addEventListener('dblclick', () => {
+    if (lbScale > 1) { lbReset(); } else { lbScale = 2; lbApply(); }
+  });
+
+  lightboxStage.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 0.18 : -0.18;
+    lbScale = Math.min(Math.max(lbScale + delta, 1), 4);
+    if (lbScale === 1) { lbX = 0; lbY = 0; }
+    lbApply();
+  }, { passive: false });
+
+  lightboxStage.addEventListener('pointerdown', (e) => {
+    if (lbScale <= 1) return;
+    lbDragging = true;
+    lightboxStage.classList.add('dragging');
+    lbStartX = e.clientX - lbX;
+    lbStartY = e.clientY - lbY;
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (!lbDragging) return;
+    lbX = e.clientX - lbStartX;
+    lbY = e.clientY - lbStartY;
+    lbApply();
+  });
+  window.addEventListener('pointerup', () => {
+    lbDragging = false;
+    lightboxStage.classList.remove('dragging');
+  });
 
   function renderCatalog(products){
     const root = document.getElementById('collectionRoot');
